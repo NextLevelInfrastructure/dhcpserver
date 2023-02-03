@@ -1,8 +1,8 @@
 # dhcpserver
 
-Next Level's DHCP server written in Go
+[Next Level's](https://nextlevel.net/) DHCP server written in Go.
 
-Always a work-in-progress
+Always a work-in-progress.
 
 ## Why our own?
 
