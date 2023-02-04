@@ -64,7 +64,7 @@ and coredhcp repos is what you want to push.
 
 Second, update dhcpserver, cd to the dhcpserver directory, and run
 ```
-sudo docker build .
+sudo docker build -t $USER/dhcpserver:latest .
 ```
 
 Third, push to production.
