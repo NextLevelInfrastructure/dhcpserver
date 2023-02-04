@@ -1,0 +1,35 @@
+# testconfig.yml - test config for Next Level dhcpserver
+
+server4:
+
+  plugins:
+
+   - server_id:   100.115.92.193 10.99.99.1
+   - interfaceid: 86400 testconfig.yml autorefresh
+   - routercidr:        testconfig.yml autorefresh
+   - dns:         1.1.1.1 1.0.0.1
+
+server6:
+
+  listen:
+
+   - "[::]"
+
+  plugins:
+
+   - server_id:   duid_ll 01:23:45:67:89:ab
+   - interfaceid: 86400 testconfig.yml autorefresh
+   - dns:         2606:4700:4700::1111 2606:4700:4700::1001
+
+router_interfaces:
+
+ - 10.1.1.254/24
+ - 10.99.99.1/27
+
+leases_by_interface:
+
+  router1.us-ca-sfba.prod.example.com:Eth12/1(Port12):
+    - [00:11:22:33:44:55, 10.99.99.10, feee:f000::1]
+    - [default, 10.99.99.13, fedb:feee::1, fedb:feee:ffff::/60]
+  router1.us-ca-sfba.prod.example.com:Eth13/1(Port13):
+    - [default, 10.1.1.129]
