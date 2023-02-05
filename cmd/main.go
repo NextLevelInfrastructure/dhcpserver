@@ -9,6 +9,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 
@@ -33,8 +34,12 @@ import (
 	pl_sleep "github.com/coredhcp/coredhcp/plugins/sleep"
 	pl_staticroute "github.com/coredhcp/coredhcp/plugins/staticroute"
 
+	"dhcpserver/requeststats"
+	"dhcpserver/responsestats"
+
 	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -43,6 +48,7 @@ var (
 	flagLogLevel    = flag.StringP("loglevel", "L", "info", fmt.Sprintf("Log level. One of %v", getLogLevels()))
 	flagConfig      = flag.StringP("conf", "c", "", "Use this configuration file instead of the default location")
 	flagPlugins     = flag.BoolP("plugins", "P", false, "list plugins")
+	flagPromport    = flag.Int("promport", 2112, "port to serve Prometheus /metrics, 0=disable")
 )
 
 var logLevels = map[string]func(*logrus.Logger){
@@ -63,6 +69,8 @@ func getLogLevels() []string {
 }
 
 var desiredPlugins = []*plugins.Plugin{
+	&requeststats.Plugin,
+	&responsestats.Plugin,
 	&pl_dns.Plugin,
 	&pl_file.Plugin,
 	&pl_interfaceid.Plugin,
@@ -120,6 +128,12 @@ func main() {
 	srv, err := server.Start(config)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if *flagPromport > 0 {
+		go func () {
+			http.Handle("/metrics", promhttp.Handler())
+			http.ListenAndServe(fmt.Sprintf(":%d", *flagPromport), nil)
+		}()
 	}
 	if err := srv.Wait(); err != nil {
 		log.Print(err)
