@@ -58,14 +58,15 @@ type PluginState struct {
 }
 
 func (state *PluginState) Handler6(req, resp dhcpv6.DHCPv6) (dhcpv6.DHCPv6, bool) {
-	reqmsg, ok := req.(*dhcpv6.Message)
-	if !ok {
-		v6types.WithLabelValues("error").Inc()
-		log.Errorf("request message format bug: %v", reqmsg)
-		return nil, true
-	}
 	if req.IsRelay() {
 		v6relay.Inc()
+	} else {
+		_, ok := req.(*dhcpv6.Message)
+		if !ok {
+			v6types.WithLabelValues("error").Inc()
+			log.Errorf("request message format bug: %v", req)
+			return nil, true
+		}
 	}
 	// inner will be the innermost relay message
 	innermsg, err := dhcpv6.DecapsulateRelayIndex(req, -1)
@@ -110,11 +111,13 @@ func (state *PluginState) Handler4(req, resp *dhcpv4.DHCPv4) (*dhcpv4.DHCPv4, bo
 	giaddr_invalid := len(req.GatewayIPAddr) == 0 || req.GatewayIPAddr.IsUnspecified()
 	if rai == nil || giaddr_invalid {
 		if rai != nil {
+			log.Infof("DHCPv4 request with giaddr but missing RelayAgentInfo: %s", req)
 			// not a suboption but we just need to count it somewhere
 			v4raimissingsuboptions.WithLabelValues("GatewayIPAddr").Inc()
 			// we account for this as a relay request with missing giaddr
 			v4relay.Inc()
 		} else if !giaddr_invalid {
+			log.Infof("DHCPv4 request with RelayAgentInfo but no giaddr: %s", req)
 			// an option, not a suboption, but we will count it here
 			v4raimissingsuboptions.WithLabelValues("RelayAgentInfo").Inc()
 			// we account for this as a relay request with missing RAI
