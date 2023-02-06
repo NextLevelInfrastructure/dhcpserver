@@ -6,7 +6,7 @@ replace github.com/coredhcp/coredhcp => ../coredhcp
 
 require (
 	github.com/coredhcp/coredhcp v0.0.0-00010101000000-000000000000
-	github.com/insomniacslk/dhcp v0.0.0-20210120172423-cc9239ac6294
+	github.com/insomniacslk/dhcp v0.0.0-20221215072855-de60144f33f8
 	github.com/prometheus/client_golang v0.9.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
@@ -19,6 +19,7 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/josharian/native v1.0.1-0.20221213033349-c1e37c09b531 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -35,7 +36,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/u-root/u-root v7.0.0+incompatible // indirect
+	github.com/u-root/uio v0.0.0-20221213070652-c3537552635f // indirect
 	github.com/willf/bitset v1.1.11 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
