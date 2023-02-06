@@ -42,6 +42,10 @@ var (
 		Name: "dhcpv6_requests_total",
 		Help: "DHCPv6 requests received, by message type",
 	}, []string{"type"})
+	v6rapidcommit = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "dhcpv6_solicit_rapid_commit_total",
+		Help: "Total number of DHCPv6 Solicit requests with Rapid Commit option",
+	})
 	v6relay = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "dhcpv6_from_relays_total",
 		Help: "Total number of DHCPv6 requests received from a relay",
@@ -87,7 +91,7 @@ func (state *PluginState) Handler6(req, resp dhcpv6.DHCPv6) (dhcpv6.DHCPv6, bool
 		log.Errorf("could not decapsulate inner message: %v", err)
 		return nil, true
 	}
-	v6types.WithLabelValues(msg.MessageType.String()).Inc()
+	v6types.WithLabelValues(msg.Type().String()).Inc()
 	if ianas := len(msg.Options.IANA()); ianas > 0 {
 		v6ia.WithLabelValues("IA_NA").Add(float64(ianas))
 	}
@@ -96,6 +100,9 @@ func (state *PluginState) Handler6(req, resp dhcpv6.DHCPv6) (dhcpv6.DHCPv6, bool
 	}
 	if iapds := len(msg.Options.IAPD()); iapds > 0 {
 		v6ia.WithLabelValues("IA_PD").Add(float64(iapds))
+	}
+	if msg.Type() == dhcpv6.MessageTypeSolicit && msg.GetOneOption(dhcpv6.OptionRapidCommit) != nil {
+		v6rapidcommit.Inc()
 	}
 	return resp, false
 }
