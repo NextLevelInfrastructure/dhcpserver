@@ -64,10 +64,17 @@ and coredhcp repos is what you want to push.
 
 Second, update dhcpserver, cd to the dhcpserver directory, and run
 ```
-sudo docker build -t $USER/dhcpserver:latest .
+docker build --tag=$USER/dhcpserver:latest .
 ```
 
-Third, push to production.
+Third, run the container. In testing:
+```
+docker container run --publish 127.0.0.1:67:67/udp --publish 127.0.0.1:2112:2112/tcp --mount type=bind,source=`pwd`/testconfig.yml,target=/configs/dhcpserver/testconfig.yml,readonly $USER/dhcpserver --conf=testconfig.yml
+```
+Or in production something like:
+```
+docker container run --network host --mount type=bind,source=`pwd`/../configs/dhcpserver,target=/configs/dhcpserver,readonly $USER/dhcpserver
+```
 
 # Author
 

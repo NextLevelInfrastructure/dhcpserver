@@ -59,12 +59,12 @@ var (
 type OptionCode = dhcpv6.OptionCode
 
 type IdentityAssociation interface {
-	Id()        [4]byte
-	Code()      OptionCode
-	ToBytes()   []byte
-	String()    string
+	Id()         [4]byte
+	Code()       OptionCode
+	ToBytes()    []byte
+	String()     string
 	New([4]byte) IdentityAssociation
-	Allocated() bool
+	Allocated()  bool
 	AddStatusUnavailable()
 }
 
