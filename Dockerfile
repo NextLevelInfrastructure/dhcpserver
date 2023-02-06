@@ -43,7 +43,7 @@ MAINTAINER daniel.dulitz@nextlevel.net
 
 EXPOSE 67/udp
 EXPOSE 547/udp
-EXPOSE 2112/tcp # Prometheus /metrics
+EXPOSE 2112/tcp
 
 USER 10000
 
