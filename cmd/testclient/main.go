@@ -76,7 +76,8 @@ func main() {
 }
 
 func do_dhcp4(macString string) {
-	giaddr := net.ParseIP("0.0.0.0")
+	//giaddr := net.ParseIP("0.0.0.0")   // use this if we want to get a response
+	giaddr := net.ParseIP("10.99.99.1")  // use this if we want the server to allocate us an IP
 	c := client4.NewClient()
 
 	log.Printf("%+v", c)
