@@ -173,16 +173,25 @@ func (state *PluginState) Handler6(req, resp dhcpv6.DHCPv6) (dhcpv6.DHCPv6, bool
 		log.Errorf("response message format bug: %v", respmsg)
 		return nil, true
 	}
-	reqmsg, ok := req.(*dhcpv6.Message)
-	if !ok {
+	if req.IsRelay() {
+		v6relay.Inc()
+	} else {
+		_, ok := req.(*dhcpv6.Message)
+		if !ok {
+			v6types.WithLabelValues("error").Inc()
+			log.Errorf("request message format bug: %v", req)
+			return nil, true
+		}
+	}
+
+	v6types.WithLabelValues(respmsg.MessageType.String()).Inc()
+	reqmsg, err := req.GetInnerMessage()
+	if err != nil {
 		v6types.WithLabelValues("error").Inc()
-		log.Errorf("request message format bug: %v", respmsg)
+		log.Errorf("could not decapsulate inner request message: %v", err)
 		return nil, true
 	}
-	if reqmsg.IsRelay() {
-		v6relay.Inc()
-	}
-	v6types.WithLabelValues(respmsg.MessageType.String()).Inc()
+
 	all_adds := 0
 	if len(reqmsg.Options.IANA()) > 0 {
 		quantifier, adds := ia_fixup(&resp, FromIANA(reqmsg.Options.IANA()), FromIANA(respmsg.Options.IANA()))
@@ -199,10 +208,14 @@ func (state *PluginState) Handler6(req, resp dhcpv6.DHCPv6) (dhcpv6.DHCPv6, bool
 		v6processed.WithLabelValues("IA_PD", quantifier).Inc()
 		all_adds = all_adds + adds
 	}
+	options := ""
+	for _, opt := range respmsg.Options.Options {
+		options += fmt.Sprintf(" %v", opt.String())
+	}
 	if all_adds > 0 {
-		state.Logger(fmt.Sprintf("[added %d statuscodes] %s", all_adds, resp))
+		state.Logger(fmt.Sprintf("[added %d statuscodes] %s %s", all_adds, resp, options))
 	} else {
-		state.Logger(resp.String())
+		state.Logger(resp.String() + " " + options)
 	}
 	return resp, false
 }
@@ -213,17 +226,24 @@ func (state *PluginState) Handler4(req, resp *dhcpv4.DHCPv4) (*dhcpv4.DHCPv4, bo
 	}
 	mac := req.ClientHWAddr
 	has_yiaddr := len(resp.YourIPAddr) > 0 && !resp.YourIPAddr.IsUnspecified()
-	if resp.MessageType() == dhcpv4.MessageTypeAck && has_yiaddr {
-		v4processed.WithLabelValues("all").Inc()
+	if resp.MessageType() == dhcpv4.MessageTypeOffer || resp.MessageType() == dhcpv4.MessageTypeAck {
+		if has_yiaddr {
+			v4processed.WithLabelValues("all").Inc()
+		} else {
+			v4processed.WithLabelValues("none").Inc()
+		}
 	}
 	v4types.WithLabelValues(resp.MessageType().String()).Inc()
 	rai := req.RelayAgentInfo()
-	if rai == nil {
+	req_has_giaddr := len(req.GatewayIPAddr) > 0 && !req.GatewayIPAddr.IsUnspecified()
+	if rai == nil || !req_has_giaddr {
 		// not a relay message
-		if len(resp.GatewayIPAddr) == 0 || resp.GatewayIPAddr.IsUnspecified() {
-			state.Logger(fmt.Sprintf("MAC %s allocated %s", mac, req.YourIPAddr))
-		} else {
-			state.Logger(fmt.Sprintf("[giaddr=%s has no RAI] MAC %s allocated %s", resp.GatewayIPAddr, mac, req.YourIPAddr))
+		if has_yiaddr {
+			if len(resp.GatewayIPAddr) == 0 || resp.GatewayIPAddr.IsUnspecified() {
+				state.Logger(fmt.Sprintf("MAC %s allocated %s", mac, resp.YourIPAddr))
+			} else {
+				state.Logger(fmt.Sprintf("[giaddr=%s has no RAI] MAC %s allocated %s", resp.GatewayIPAddr, mac, resp.YourIPAddr))
+			}
 		}
 		return resp, false
 	}
@@ -239,7 +259,9 @@ func (state *PluginState) Handler4(req, resp *dhcpv4.DHCPv4) (*dhcpv4.DHCPv4, bo
 			intfstr = "<unspecified>"
 		}
 	}
-	state.Logger(fmt.Sprintf("[relay=%s link=%s intf=%s] MAC %s allocated %s", peerstr, linkstr, intfstr, mac, req.YourIPAddr))
+	if has_yiaddr {
+		state.Logger(fmt.Sprintf("[relay=%s link=%s intf=%s] MAC %s allocated %s", peerstr, linkstr, intfstr, mac, resp.YourIPAddr))
+	}
 
 	return resp, false
 }
