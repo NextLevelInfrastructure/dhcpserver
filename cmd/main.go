@@ -69,22 +69,27 @@ func getLogLevels() []string {
 }
 
 var desiredPlugins = []*plugins.Plugin{
+	// these plugins are DHCPv4 and DHCPv6
 	&requeststats.Plugin,
 	&responsestats.Plugin,
+	&pl_serverid.Plugin,
+	&pl_sleep.Plugin,
 	&pl_dns.Plugin,
-	&pl_file.Plugin,
+	&pl_searchdomains.Plugin,
+	&pl_nbp.Plugin,
 	&pl_interfaceid.Plugin,
+	&pl_file.Plugin,
+
+	// this plugin is DHCPv6 only
+	//&pl_prefix.Plugin,
+
+	// remaining plugins are DHCPv4 only
 	&pl_leasetime.Plugin,
 	&pl_mtu.Plugin,
-	&pl_nbp.Plugin,
 	&pl_netmask.Plugin,
-	//&pl_prefix.Plugin,
 	&pl_range.Plugin,
 	&pl_router.Plugin,
 	&pl_routercidr.Plugin,
-	&pl_searchdomains.Plugin,
-	&pl_serverid.Plugin,
-	&pl_sleep.Plugin,
 	&pl_staticroute.Plugin,
 }
 
